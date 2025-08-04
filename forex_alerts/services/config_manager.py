@@ -249,18 +249,42 @@ class ConfigManager:
         Returns:
             Dict[str, Any]: Migrated configuration data
         """
-        # Get current version from config, default to "1.0" if not present
-        config_version = config_data.get('version', '1.0')
+        current_version = config_data.get('_version', '0.0')
         
-        # Currently only version 1.0 exists, but this structure allows for future migrations
-        if config_version == '1.0':
-            # No migration needed for current version
-            pass
+        # Migration logic for different versions
+        if current_version == '0.0':
+            # Migrate from version 0.0 (no version) to 1.0
+            config_data = self._migrate_from_v0_to_v1(config_data)
         
-        # Add version to config data if not present
-        config_data['version'] = self.CONFIG_VERSION
+        # Future migrations can be added here
+        # elif current_version == '1.0':
+        #     config_data = self._migrate_from_v1_to_v2(config_data)
         
         return config_data
+    
+    def _migrate_from_v0_to_v1(self, config_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Migrate configuration from version 0.0 to 1.0.
+        
+        Args:
+            config_data: Configuration data from version 0.0
+            
+        Returns:
+            Dict[str, Any]: Migrated configuration data
+        """
+        # Add any missing fields with defaults
+        migrated_data = config_data.copy()
+        
+        # Ensure notification_methods is a list
+        if 'notification_methods' in migrated_data:
+            if isinstance(migrated_data['notification_methods'], str):
+                migrated_data['notification_methods'] = [migrated_data['notification_methods']]
+        
+        # Add version information
+        migrated_data['_version'] = '1.0'
+        migrated_data['_migrated'] = self._get_timestamp()
+        
+        return migrated_data
     
 
     
@@ -268,7 +292,7 @@ class ConfigManager:
     
     def _merge_with_defaults(self, config_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Merge loaded configuration with default values to ensure all fields are present.
+        Merge configuration data with default values.
         
         Args:
             config_data: Configuration data from file
@@ -279,19 +303,16 @@ class ConfigManager:
         default_config = self.get_default_config()
         default_dict = default_config.to_dict()
         
-        # Start with defaults and update with loaded values
-        merged_config = default_dict.copy()
+        # Merge defaults with loaded config (loaded config takes precedence)
+        merged_data = default_dict.copy()
+        merged_data.update(config_data)
         
-        # Remove version from defaults as it's handled separately
-        if 'version' in merged_config:
-            del merged_config['version']
+        # Preserve metadata fields
+        for key in ['_version', '_created', '_updated', '_migrated']:
+            if key in config_data:
+                merged_data[key] = config_data[key]
         
-        # Update with loaded values, preserving version
-        for key, value in config_data.items():
-            if key != 'version':  # Version is handled in migration
-                merged_config[key] = value
-        
-        return merged_config
+        return merged_data
     
     def _get_timestamp(self) -> str:
         """

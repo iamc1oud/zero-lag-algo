@@ -287,7 +287,7 @@ class TestConfigManager(unittest.TestCase):
         config_data = {
             'symbols': ['EURUSD=X'],
             'ema_length': 15,
-            'version': '1.0'
+            '_version': '1.0'
         }
         
         result = self.config_manager._migrate_config(config_data)
@@ -295,7 +295,7 @@ class TestConfigManager(unittest.TestCase):
         # Should remain unchanged for current version
         self.assertEqual(result['symbols'], ['EURUSD=X'])
         self.assertEqual(result['ema_length'], 15)
-        self.assertEqual(result['version'], '1.0')
+        self.assertEqual(result['_version'], '1.0')
     
     def test_migrate_config_no_version(self):
         """Test config migration when no version is present."""
@@ -307,7 +307,7 @@ class TestConfigManager(unittest.TestCase):
         result = self.config_manager._migrate_config(config_data)
         
         # Should add current version
-        self.assertEqual(result['version'], '1.0')
+        self.assertEqual(result['_version'], '1.0')
         self.assertEqual(result['symbols'], ['EURUSD=X'])
         self.assertEqual(result['ema_length'], 15)
     
