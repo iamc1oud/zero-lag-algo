@@ -264,33 +264,11 @@ class ConfigManager:
     
 
     
-    def _migrate_from_v0_to_v1(self, config_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Migrate configuration from version 0.0 to 1.0.
-        
-        Args:
-            config_data: Configuration data from version 0.0
-            
-        Returns:
-            Dict[str, Any]: Migrated configuration data
-        """
-        # Add any missing fields with defaults
-        migrated_data = config_data.copy()
-        
-        # Ensure notification_methods is a list
-        if 'notification_methods' in migrated_data:
-            if isinstance(migrated_data['notification_methods'], str):
-                migrated_data['notification_methods'] = [migrated_data['notification_methods']]
-        
-        # Add version information
-        migrated_data['_version'] = '1.0'
-        migrated_data['_migrated'] = self._get_timestamp()
-        
-        return migrated_data
+
     
     def _merge_with_defaults(self, config_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Merge configuration data with default values.
+        Merge loaded configuration with default values to ensure all fields are present.
         
         Args:
             config_data: Configuration data from file
@@ -301,16 +279,19 @@ class ConfigManager:
         default_config = self.get_default_config()
         default_dict = default_config.to_dict()
         
-        # Merge defaults with loaded config (loaded config takes precedence)
-        merged_data = default_dict.copy()
-        merged_data.update(config_data)
+        # Start with defaults and update with loaded values
+        merged_config = default_dict.copy()
         
-        # Preserve metadata fields
-        for key in ['_version', '_created', '_updated', '_migrated']:
-            if key in config_data:
-                merged_data[key] = config_data[key]
+        # Remove version from defaults as it's handled separately
+        if 'version' in merged_config:
+            del merged_config['version']
         
-        return merged_data
+        # Update with loaded values, preserving version
+        for key, value in config_data.items():
+            if key != 'version':  # Version is handled in migration
+                merged_config[key] = value
+        
+        return merged_config
     
     def _get_timestamp(self) -> str:
         """
