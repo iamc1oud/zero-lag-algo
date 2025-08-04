@@ -1,0 +1,22 @@
+# Core data processing and market data
+yfinance>=0.2.18
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Email notifications (smtplib is built-in)
+
+# Desktop notifications
+plyer>=2.1.0
+
+# Configuration and utilities
+python-dotenv>=1.0.0
+
+# Development and testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+
+# Type checking and code quality
+mypy>=1.5.0
+black>=23.7.0
+flake8>=6.0.0
